@@ -69,12 +69,20 @@ public class SettingsUI : MonoBehaviour
 		{
 			Dropdown_Measure(gameType);
 		}
+		else
+		{
+			Dropdown_Measure(0);
+		}
 
 		// Ruler Length
 		int rulerLength = 0;
 		if (PlayerPrefsRG.RulerLength(ref rulerLength))
 		{
 			Dropdown_Length(rulerLength);
+		}
+		else
+		{
+			Dropdown_Length(3);
 		}
 	}
 

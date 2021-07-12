@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 
 public class UIManager : MonoBehaviour
 {
 	public TextMeshProUGUI targetMeasureText;
+	public TextMeshProUGUI gameOverText;
 	public TextMeshProUGUI scoreText;
 	public Transform strikesT;
 	SettingsUI settingsUI;
 	Image[] strikes;
 	LevelsUI levelsUI;
+
+	public Button playButton, settingsButton;
+	public CanvasGroup buttonCanvasGroup;
+	public float buttonsFadeTime;
 
 	private void Awake()
 	{
@@ -19,11 +25,13 @@ public class UIManager : MonoBehaviour
 		settingsUI = GetComponentInChildren<SettingsUI>();
 		GetStrikes();
 		ResetStrikes();
+		SetScore(0);
 	}
 
 	private void Start()
 	{
 		SetLevel(0);
+		ActivateButtonPanel();
 	}
 
 	public void SetTargetMeasure(int targetMeasure)
@@ -78,6 +86,33 @@ public class UIManager : MonoBehaviour
 	}
 
 
+	Tween buttonsFadeTween;
+	public void ActivateButtonPanel(bool activate = true)
+	{
+		targetMeasureText.enabled = !activate;
+		if (activate) gameOverText.enabled = false;
+		playButton.enabled = settingsButton.enabled = activate;
+		buttonsFadeTween.Kill();
+		buttonsFadeTween = DOTween.To(() => buttonCanvasGroup.alpha, x => buttonCanvasGroup.alpha = x, activate ? 1 : 0, buttonsFadeTime);
+	}
+
+	public void GameOver()
+	{
+		StartCoroutine(GameOverRoutine());
+	}
+
+	IEnumerator GameOverRoutine()
+	{
+		yield return new WaitForSeconds(1);
+		targetMeasureText.enabled = false;
+		gameOverText.enabled = true;
+		Color c = gameOverText.color;
+		c.a = 0;
+		gameOverText.color = c;
+		gameOverText.DOFade(1, 1);
+		yield return new WaitForSeconds(3);
+		ActivateButtonPanel();
+	}
 
 
 }

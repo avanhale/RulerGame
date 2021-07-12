@@ -52,9 +52,15 @@ public class GameManager : MonoBehaviour
 	public Levels levels;
 
 	public float levelBreakTime;
+	public float measurementBreakTime;
 	public float incorrectBreakTime;
 
+	public bool canTickClock;
+	public float tickClockTime;
 
+	public int numberLevelsToPlay;
+
+	public IncorrectMeasureUI incorrectMeasureUI;
 
 	public delegate void GameStarted();
 	public static event GameStarted OnGameStarted;
@@ -66,10 +72,11 @@ public class GameManager : MonoBehaviour
 
 	public void StartGame()
 	{
-		StartNewMeasurement();
+		SetLevel(1);
 		SetStrikes(0);
 		SetScore(0);
-		SetLevel(1);
+		uiManager.ActivateButtonPanel(false);
+		StartNewMeasurement();
 		OnGameStarted?.Invoke();
 	}
 
@@ -77,7 +84,10 @@ public class GameManager : MonoBehaviour
 	{
 		StartTimeRoutine();
 		canSelectMeasurement = true;
+		canTickClock = true;
 		IncorrectPost.instance.DeactivateMarker();
+		incorrectMeasureUI.Deactivate();
+		audioManager.NewMeasure();
 	}
 
 	void StartTimeRoutine()
@@ -101,6 +111,11 @@ public class GameManager : MonoBehaviour
 			yield return null;
 			timeCount -= Time.deltaTime;
 			timeCountUI.UpdateTime();
+			if (canTickClock && timeCount < tickClockTime)
+			{
+				AudioManager.instance.ClockTicking();
+				canTickClock = false;
+			}
 		}
 		TimeRanOut();
 	}
@@ -110,7 +125,7 @@ public class GameManager : MonoBehaviour
 		Incorrect(0, 0);
 	}
 
-	public void SelectMeasurement(int measurementIndex, float currentMeasurementDistance)
+	public void SelectMeasurement(int measurementIndex, float measurementDistance)
 	{
 		if (measurementIndex == targetMeasureIndex)
 		{
@@ -118,32 +133,39 @@ public class GameManager : MonoBehaviour
 		}
 		else
 		{
-			Incorrect(measurementIndex, currentMeasurementDistance);
+			Incorrect(measurementIndex, measurementDistance);
 		}
+		audioManager.StopClockTicking();
 	}
 
 	void Correct()
 	{
 		audioManager.Correct();
 		SetScore(currentScore + scoreIncrement);
+		bool willIncreaseLevel = WillIncreaseLevel(scoreIncrement);
+		if (willIncreaseLevel && currentLevel == numberLevelsToPlay)
+		{
+			EndGame();
+			return;
+		}
 		bool increasedLevel = TryIncreaseLevel(scoreIncrement);
-		if (increasedLevel)
-		{
-			StopTimeRoutine();
-			Invoke("StartNewMeasurement", levelBreakTime);
-		}
-		else
-		{
-			StartNewMeasurement();
-		}
+		if (increasedLevel) StopTimeRoutine();
+		Invoke("StartNewMeasurement", increasedLevel ? levelBreakTime : measurementBreakTime);
+
 	}
 
 
 	void Incorrect(int measurementIndex, float measurementDistance)
 	{
 		audioManager.Incorrect();
-		IncorrectPost.instance.ActivateMarker(measurementIndex, measurementDistance);
+
+		float guessMeasurementDistance = measurementDistance * measurementIndex;
+		IncorrectPost.instance.ActivateMarker(measurementIndex, guessMeasurementDistance);
+		float targetMeasurementDistance = measurementDistance * targetMeasureIndex;
+		incorrectMeasureUI.Activate(targetMeasurementDistance);
+
 		SetStrikes(numberStrikes + 1);
+
 		if (numberStrikes < maxNumberStrikes)
 		{
 			StopTimeRoutine();
@@ -154,6 +176,11 @@ public class GameManager : MonoBehaviour
 		{
 			EndGame();
 		}
+	}
+
+	bool WillIncreaseLevel(int scoreIncrement)
+	{
+		return currentLevelScore + scoreIncrement >= targetLevelScore;
 	}
 
 
@@ -184,6 +211,8 @@ public class GameManager : MonoBehaviour
 	{
 		canSelectMeasurement = false;
 		StopTimeRoutine();
+		uiManager.GameOver();
+		audioManager.GameOver();
 	}
 
 	void SetStrikes(int strikes)

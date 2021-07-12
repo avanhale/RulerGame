@@ -22,7 +22,7 @@ public class IncorrectPost : MonoBehaviour
 	}
 
 
-	public void ActivateMarker(int measureIndex,float xPos)
+	public void ActivateMarker(int measureIndex, float xPos)
 	{
 		Vector2 pos = myRT.anchoredPosition;
 		pos.x = xPos;

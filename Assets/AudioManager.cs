@@ -9,6 +9,9 @@ public class AudioManager : MonoBehaviour
 	public AudioSource incorrectSource;
 	public AudioSource measureTickSource;
 	public AudioSource levelUpSource;
+	public AudioSource clockTickingSource;
+	public AudioSource gameOverSource;
+	public AudioSource newMeasureSource;
 
 	private void Awake()
 	{
@@ -34,6 +37,28 @@ public class AudioManager : MonoBehaviour
 	{
 		levelUpSource.Play();
 	}
+
+	public void ClockTicking()
+	{
+		clockTickingSource.Play();
+	}
+	public void StopClockTicking()
+	{
+		clockTickingSource.Stop();
+	}
+
+
+	public void GameOver()
+	{
+		gameOverSource.PlayDelayed(1);
+	}
+
+
+	public void NewMeasure()
+	{
+		newMeasureSource.Play();
+	}
+
 
 
 }

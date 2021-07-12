@@ -6,7 +6,7 @@ using TMPro;
 
 public class MeasureSelector : MonoBehaviour
 {
-	public RectTransform measureRT, cursorRT;
+	public RectTransform measureRT, measureIncorrectRT;
 	Image measureImage;
 	public TextMeshProUGUI measureText;
 
@@ -70,8 +70,7 @@ public class MeasureSelector : MonoBehaviour
 
 	void SelectMeasurement()
 	{
-		float currentMeasurementDistance = measurementDistance * currentMeasureIndex;
-		GameManager.instance.SelectMeasurement(currentMeasureIndex, currentMeasurementDistance);
+		GameManager.instance.SelectMeasurement(currentMeasureIndex, measurementDistance);
 	}
 
 
