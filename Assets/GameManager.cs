@@ -14,7 +14,6 @@ public class GameManager : MonoBehaviour
 
 	public float timeCount;
 
-	public int currentNumberInchBlocks;
 	public int targetMeasureIndex;
 
 	public int numberStrikes;
@@ -30,6 +29,36 @@ public class GameManager : MonoBehaviour
 
 	public int currentLevel;
 
+
+	[System.Serializable]
+	public class GameSettings
+	{
+		public Rules.GameType gameType;
+		public int rulerLength;
+
+		public void SetGameType(Rules.GameType _gameType)
+		{
+			gameType = _gameType;
+		}
+
+		public void SetRulerLength(int _rulerLength)
+		{
+			rulerLength = _rulerLength;
+			RulerUI.instance.SetInchBlocks(rulerLength);
+		}
+	}
+
+	public GameSettings gameSettings;
+	public Levels levels;
+
+	public float levelBreakTime;
+	public float incorrectBreakTime;
+
+
+
+	public delegate void GameStarted();
+	public static event GameStarted OnGameStarted;
+
 	private void Awake()
 	{
 		instance = this;
@@ -40,12 +69,15 @@ public class GameManager : MonoBehaviour
 		StartNewMeasurement();
 		SetStrikes(0);
 		SetScore(0);
+		SetLevel(1);
+		OnGameStarted?.Invoke();
 	}
 
 	void StartNewMeasurement()
 	{
 		StartTimeRoutine();
 		canSelectMeasurement = true;
+		IncorrectPost.instance.DeactivateMarker();
 	}
 
 	void StartTimeRoutine()
@@ -75,10 +107,10 @@ public class GameManager : MonoBehaviour
 
 	void TimeRanOut()
 	{
-		Incorrect();
+		Incorrect(0, 0);
 	}
 
-	public void SelectMeasurement(int measurementIndex)
+	public void SelectMeasurement(int measurementIndex, float currentMeasurementDistance)
 	{
 		if (measurementIndex == targetMeasureIndex)
 		{
@@ -86,26 +118,37 @@ public class GameManager : MonoBehaviour
 		}
 		else
 		{
-			Incorrect();
+			Incorrect(measurementIndex, currentMeasurementDistance);
 		}
 	}
 
 	void Correct()
 	{
 		audioManager.Correct();
-		StartNewMeasurement();
 		SetScore(currentScore + scoreIncrement);
-		TryIncreaseLevel(scoreIncrement);
+		bool increasedLevel = TryIncreaseLevel(scoreIncrement);
+		if (increasedLevel)
+		{
+			StopTimeRoutine();
+			Invoke("StartNewMeasurement", levelBreakTime);
+		}
+		else
+		{
+			StartNewMeasurement();
+		}
 	}
 
 
-	void Incorrect()
+	void Incorrect(int measurementIndex, float measurementDistance)
 	{
 		audioManager.Incorrect();
+		IncorrectPost.instance.ActivateMarker(measurementIndex, measurementDistance);
 		SetStrikes(numberStrikes + 1);
 		if (numberStrikes < maxNumberStrikes)
 		{
-			StartNewMeasurement();
+			StopTimeRoutine();
+			canSelectMeasurement = false;
+			Invoke("StartNewMeasurement", incorrectBreakTime);
 		}
 		else
 		{
@@ -114,20 +157,27 @@ public class GameManager : MonoBehaviour
 	}
 
 
-	void TryIncreaseLevel(int scoreIncrement)
+	bool TryIncreaseLevel(int scoreIncrement)
 	{
 		currentLevelScore += scoreIncrement;
 		if (currentLevelScore >= targetLevelScore)
 		{
 			SetLevel(currentLevel + 1);
 			currentLevelScore = 0;
+			return true;
 		}
+		return false;
 	}
 
 	void SetLevel(int level)
 	{
 		currentLevel = level;
 		uiManager.SetLevel(currentLevel);
+		audioManager.LevelUp();
+
+		Levels.Level newLevel = levels.GetLevel(level);
+		startTimeCount = newLevel.countdownTime;
+		scoreIncrement = newLevel.scoreIncrement;
 	}
 
 	void EndGame()
@@ -158,7 +208,13 @@ public class GameManager : MonoBehaviour
 
 	int GetRandomMeasureIndex()
 	{
-		return Random.Range(0, currentNumberInchBlocks * Rules.NUM_SIXTEENTHS_PER_INCH);
+		int randomMeasureIndex = 0;
+		for (int i = 0; i < 5; i++)
+		{
+			randomMeasureIndex = Random.Range(1, Rules.MaxNumberOfMarks(gameSettings.gameType, gameSettings.rulerLength)+1);
+			if (randomMeasureIndex != targetMeasureIndex) break;
+		}
+		return randomMeasureIndex;
 	}
 
 

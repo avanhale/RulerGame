@@ -8,6 +8,7 @@ public class AudioManager : MonoBehaviour
 	public AudioSource correctSource;
 	public AudioSource incorrectSource;
 	public AudioSource measureTickSource;
+	public AudioSource levelUpSource;
 
 	private void Awake()
 	{
@@ -27,6 +28,11 @@ public class AudioManager : MonoBehaviour
 	public void MeasureTick()
 	{
 		if (!measureTickSource.isPlaying) measureTickSource.Play();
+	}
+
+	public void LevelUp()
+	{
+		levelUpSource.Play();
 	}
 
 

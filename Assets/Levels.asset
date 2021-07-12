@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1ef7698d746d9244918a557797bdc6e, type: 3}
+  m_Name: Levels
+  m_EditorClassIdentifier: 
+  levels:
+  - countdownTime: 10
+    scoreIncrement: 10
+  - countdownTime: 9
+    scoreIncrement: 20
+  - countdownTime: 8
+    scoreIncrement: 30
+  - countdownTime: 7
+    scoreIncrement: 40
+  - countdownTime: 6
+    scoreIncrement: 50
+  - countdownTime: 5
+    scoreIncrement: 60
+  - countdownTime: 4
+    scoreIncrement: 70
+  - countdownTime: 3
+    scoreIncrement: 80
+  - countdownTime: 2
+    scoreIncrement: 90
+  - countdownTime: 1
+    scoreIncrement: 100

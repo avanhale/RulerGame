@@ -9,14 +9,20 @@ public class UIManager : MonoBehaviour
 	public TextMeshProUGUI targetMeasureText;
 	public TextMeshProUGUI scoreText;
 	public Transform strikesT;
+	SettingsUI settingsUI;
 	Image[] strikes;
 	LevelsUI levelsUI;
 
 	private void Awake()
 	{
 		levelsUI = GetComponentInChildren<LevelsUI>();
+		settingsUI = GetComponentInChildren<SettingsUI>();
 		GetStrikes();
 		ResetStrikes();
+	}
+
+	private void Start()
+	{
 		SetLevel(0);
 	}
 
@@ -56,5 +62,22 @@ public class UIManager : MonoBehaviour
 	{
 		strikes = strikesT.GetComponentsInChildren<Image>();
 	}
+
+
+	public void CloseSettingsMenu()
+	{
+		settingsUI.OpenSettings(false);
+	}
+
+
+
+	public void Button_PlayGame()
+	{
+		GameManager.instance.StartGame();
+		CloseSettingsMenu();
+	}
+
+
+
 
 }

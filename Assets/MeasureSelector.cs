@@ -6,17 +6,16 @@ using TMPro;
 
 public class MeasureSelector : MonoBehaviour
 {
-	public GameManager gameManager;
 	public RectTransform measureRT, cursorRT;
 	Image measureImage;
 	public TextMeshProUGUI measureText;
-	public float sixteenthDistance;
-	public int numInches;
 
 	public Vector3 mousePosition;
 	public Vector2 rulerPos;
 	public int currentMeasureIndex;
 
+	public int maxNumMeasureIndexes;
+	public float measurementDistance;
 
 	public int inchIndex;
 	public int microMeasureIndex;
@@ -28,16 +27,22 @@ public class MeasureSelector : MonoBehaviour
 
 	private void OnEnable()
 	{
-		RulerPointerHover.OnHover += RulerPointerHover_OnHover;
+		RulerUI.OnHover += RulerPointerHover_OnHover;
+		GameManager.OnGameStarted += GameManager_OnGameStarted;
 	}
 	private void OnDisable()
 	{
-		RulerPointerHover.OnHover -= RulerPointerHover_OnHover;
+		RulerUI.OnHover -= RulerPointerHover_OnHover;
+		GameManager.OnGameStarted -= GameManager_OnGameStarted;
 	}
 
 	private void RulerPointerHover_OnHover(bool isHovering)
 	{
 		measureImage.enabled = isHovering;
+	}
+	private void GameManager_OnGameStarted()
+	{
+		UpdateMeasurementLengths();
 	}
 
 	private void Update()
@@ -48,7 +53,7 @@ public class MeasureSelector : MonoBehaviour
 		{
 			if (RectTransformUtility.ScreenPointToLocalPointInRectangle(measureRT, mousePosition, null, out rulerPos))
 			{
-				if (RulerPointerHover.isHovering)
+				if (RulerUI.isHovering)
 				{
 					UpdateMeasureIndex();
 
@@ -58,28 +63,25 @@ public class MeasureSelector : MonoBehaviour
 					{
 						SelectMeasurement();
 					}
-
 				}
 			}
-			
 		}
-
 	}
 
 	void SelectMeasurement()
 	{
-		gameManager.SelectMeasurement(currentMeasureIndex);
+		float currentMeasurementDistance = measurementDistance * currentMeasureIndex;
+		GameManager.instance.SelectMeasurement(currentMeasureIndex, currentMeasurementDistance);
 	}
 
 
 	void UpdateMeasureIndex()
 	{
-		int maxNumMeasureIndexes = Rules.NUM_SIXTEENTHS_PER_INCH * numInches;
 		int targetMeasureIndex = -1;
 		float targetMeasureDistance = Mathf.Infinity;
 		for (int i = 0; i <= maxNumMeasureIndexes; i++)
 		{
-			float measureAmount = sixteenthDistance * i;
+			float measureAmount = measurementDistance * i;
 			float measureDistance = Mathf.Abs(measureAmount - rulerPos.x);
 			if (measureDistance < targetMeasureDistance)
 			{
@@ -91,7 +93,7 @@ public class MeasureSelector : MonoBehaviour
 		currentMeasureIndex = targetMeasureIndex;
 
 		Vector2 measurePos = measureRT.sizeDelta;
-		measurePos.x = sixteenthDistance * currentMeasureIndex;
+		measurePos.x = measurementDistance * currentMeasureIndex;
 		measureRT.sizeDelta = measurePos;
 	}
 
@@ -106,15 +108,18 @@ public class MeasureSelector : MonoBehaviour
 
 
 
-
 	void SetMeasureText(string measureString)
 	{
 		measureText.text = measureString;
 	}
 
 
+	void UpdateMeasurementLengths()
+	{
+		maxNumMeasureIndexes = Rules.MaxNumberOfMarks(GameManager.instance.gameSettings.gameType, GameManager.instance.gameSettings.rulerLength);
+		measurementDistance = Rules.MeasurementDistance(GameManager.instance.gameSettings.gameType);
+	}
 
-	
 
 
 }

@@ -12,7 +12,7 @@ public class MeasureIndexSplitter : MonoBehaviour
 		string measureString = string.Empty;
 		ConvertMeasureIndex(measureIndex, out var inchIndex, out var remainderIndex);
 		string inchString = inchIndex.ToString();
-		string remainderString = RemainderIndex_Fraction(remainderIndex);
+		string remainderString = RemainderIndex_Fraction(ConvertIntoSixteenths(remainderIndex));
 		if (inchIndex == 0 && remainderIndex == 0) measureString = inchString;
 		else if (inchIndex == 0) measureString = remainderString;
 		else if (remainderIndex == 0) measureString = inchString;
@@ -23,13 +23,22 @@ public class MeasureIndexSplitter : MonoBehaviour
 
 	public static void ConvertMeasureIndex(int measureIndex, out int inchIndex, out int remainderIndex)
 	{
-		inchIndex = Mathf.FloorToInt(measureIndex / Rules.NUM_SIXTEENTHS_PER_INCH);
-		remainderIndex = measureIndex % Rules.NUM_SIXTEENTHS_PER_INCH;
+		int numMarksPerInch = Rules.NumberMarksPerInch(GameManager.instance.gameSettings.gameType);
+		inchIndex = Mathf.FloorToInt(measureIndex / numMarksPerInch);
+		remainderIndex = measureIndex % numMarksPerInch;
+	}
+
+	static int ConvertIntoSixteenths(int measureIndex)
+	{
+		int numMarksPerInch = Rules.NumberMarksPerInch(GameManager.instance.gameSettings.gameType);
+		int sixteenthsPerMark = Rules.NUM_SIXTEENTHS_PER_INCH / numMarksPerInch;
+		return sixteenthsPerMark * measureIndex;
 	}
 
 
 	static string RemainderIndex_Fraction(int measureIndex)
 	{
+		/// measureIndex: Converted into sixteenths
 		switch (measureIndex)
 		{
 			case 0: return string.Empty;
